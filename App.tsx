@@ -93,30 +93,33 @@ const App: React.FC = () => {
   }, [products, selectedCategory, searchQuery]);
 
   if (appState === AppState.LOGIN) return <LoginPage onLogin={handleLogin} />;
+  
   if (appState === AppState.ADMIN_DASHBOARD) {
     return (
-      <AdminDashboard 
-        products={products} 
-        categories={CATEGORIES} 
-        orders={activeOrders}
-        onUpdateStatus={updateOrderStatus}
-        onToggleStock={toggleStock}
-        onAddProduct={(p) => setProducts([p, ...products])}
-        onDeleteProduct={(id) => setProducts(products.filter(p => p.id !== id))}
-        onLogout={logout}
-      />
+      <div className="animate-fade-in h-screen">
+        <AdminDashboard 
+          products={products} 
+          categories={CATEGORIES} 
+          orders={activeOrders}
+          onUpdateStatus={updateOrderStatus}
+          onToggleStock={toggleStock}
+          onAddProduct={(p) => setProducts([p, ...products])}
+          onDeleteProduct={(id) => setProducts(products.filter(p => p.id !== id))}
+          onLogout={logout}
+        />
+      </div>
     );
   }
 
   if (appState === AppState.HOME) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-emerald-600 text-white cursor-pointer relative overflow-hidden" onClick={() => setAppState(AppState.MENU)}>
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-emerald-600 text-white cursor-pointer relative overflow-hidden animate-fade-in" onClick={() => setAppState(AppState.MENU)}>
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <button onClick={(e) => { e.stopPropagation(); logout(); }} className="absolute top-8 right-8 bg-white/10 px-6 py-2 rounded-full font-bold border border-white/20 z-10">Exit Kiosk</button>
-        <button onClick={(e) => { e.stopPropagation(); setAppState(AppState.ORDER_TRACKING); }} className="absolute top-8 left-8 bg-white/10 px-6 py-2 rounded-full font-bold border border-white/20 z-10">Track Orders</button>
+        <button onClick={(e) => { e.stopPropagation(); logout(); }} className="absolute top-8 right-8 bg-white/10 px-6 py-2 rounded-full font-bold border border-white/20 z-10 hover:bg-white/20 transition-colors">Exit Kiosk</button>
+        <button onClick={(e) => { e.stopPropagation(); setAppState(AppState.ORDER_TRACKING); }} className="absolute top-8 left-8 bg-white/10 px-6 py-2 rounded-full font-bold border border-white/20 z-10 hover:bg-white/20 transition-colors">Track Orders</button>
         
-        <div className="text-center z-10 space-y-6 animate-in fade-in zoom-in duration-700">
-          <div className="text-9xl mb-4">🍔</div>
+        <div className="text-center z-10 space-y-6 animate-slide-up">
+          <div className="text-9xl mb-4 transition-transform hover:scale-110 duration-500">🍔</div>
           <h1 className="text-8xl font-black uppercase tracking-tighter">QuickBite</h1>
           <p className="text-2xl font-medium tracking-widest opacity-80 uppercase">The Future of Fast Food</p>
           <div className="mt-16 bg-white text-emerald-600 px-12 py-6 rounded-3xl text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-bounce">
@@ -127,32 +130,41 @@ const App: React.FC = () => {
     );
   }
 
-  if (appState === AppState.ORDER_TRACKING) return <OrderTracking orders={activeOrders} onBack={() => setAppState(AppState.HOME)} />;
-  if (appState === AppState.CONFIRMATION) return <OrderConfirmation orderNumber={lastOrderId} onReset={() => { setCart([]); setAppState(AppState.HOME); }} />;
+  if (appState === AppState.ORDER_TRACKING) {
+    return (
+      <div className="animate-fade-in h-screen">
+        <OrderTracking orders={activeOrders} onBack={() => setAppState(AppState.HOME)} />
+      </div>
+    );
+  }
+  
+  if (appState === AppState.CONFIRMATION) {
+    return <OrderConfirmation orderNumber={lastOrderId} onReset={() => { setCart([]); setAppState(AppState.HOME); }} />;
+  }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <header className="h-20 bg-white border-b flex items-center justify-between px-8 shadow-sm shrink-0">
+    <div className="h-screen flex flex-col bg-gray-50 animate-fade-in">
+      <header className="h-20 bg-white border-b flex items-center justify-between px-8 shadow-sm shrink-0 z-10">
         <div className="flex items-center space-x-4">
-          <h2 className="text-3xl font-black text-emerald-600 tracking-tighter">QuickBite</h2>
+          <h2 className="text-3xl font-black text-emerald-600 tracking-tighter hover:scale-105 transition-transform cursor-pointer" onClick={() => setAppState(AppState.HOME)}>QuickBite</h2>
           <div className="h-8 w-px bg-gray-200"></div>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">🔍</span>
+          <div className="relative group">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl group-focus-within:text-emerald-500 transition-colors">🔍</span>
             <input 
               type="text" 
               placeholder="Search menu..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-6 py-3 bg-gray-100 rounded-2xl w-80 focus:ring-2 focus:ring-emerald-500 outline-none font-medium transition-all"
+              className="pl-12 pr-6 py-3 bg-gray-100 rounded-2xl w-80 focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:shadow-md outline-none font-medium transition-all"
             />
           </div>
         </div>
-        <button onClick={() => setAppState(AppState.HOME)} className="text-gray-400 font-bold hover:text-red-500 transition-colors">Cancel Order</button>
+        <button onClick={() => setAppState(AppState.HOME)} className="text-gray-400 font-bold hover:text-red-500 transition-all hover:scale-105 active:scale-95">Cancel Order</button>
       </header>
 
       <main className="flex flex-1 overflow-hidden">
         <CategorySidebar categories={CATEGORIES} selectedId={selectedCategory} onSelect={(id) => { setSelectedCategory(id); setSearchQuery(''); }} />
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-8 page-transition-wrapper animate-slide-up">
           <div className="mb-8">
             <h1 className="text-4xl font-black text-gray-900">{CATEGORIES.find(c => c.id === selectedCategory)?.name}</h1>
             <p className="text-gray-500 font-medium">Select your favorites below</p>
