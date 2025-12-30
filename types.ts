@@ -29,8 +29,15 @@ export interface CartItem {
   totalPrice: number;
 }
 
+export enum UserRole {
+  CUSTOMER = 'CUSTOMER',
+  ADMIN = 'ADMIN'
+}
+
 export enum AppState {
+  LOGIN = 'LOGIN',
   HOME = 'HOME',
   MENU = 'MENU',
-  CONFIRMATION = 'CONFIRMATION'
+  CONFIRMATION = 'CONFIRMATION',
+  ADMIN_DASHBOARD = 'ADMIN_DASHBOARD'
 }

@@ -1,19 +1,38 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { AppState, Category, Product, CartItem, ProductOption } from './types';
-import { CATEGORIES, PRODUCTS } from './constants';
+import React, { useState, useMemo } from 'react';
+import { AppState, Category, Product, CartItem, ProductOption, UserRole } from './types';
+import { CATEGORIES, PRODUCTS as INITIAL_PRODUCTS } from './constants';
 import CategorySidebar from './components/CategorySidebar';
 import ProductGrid from './components/ProductGrid';
 import CartSidebar from './components/CartSidebar';
 import CustomizationModal from './components/CustomizationModal';
 import OrderConfirmation from './components/OrderConfirmation';
+import LoginPage from './components/LoginPage';
+import AdminDashboard from './components/AdminDashboard';
 
 const App: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>(AppState.HOME);
+  const [appState, setAppState] = useState<AppState>(AppState.LOGIN);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIES[0].id);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
   const [lastOrderNumber, setLastOrderNumber] = useState<string>('');
+
+  const handleLogin = (role: UserRole) => {
+    setUserRole(role);
+    if (role === UserRole.ADMIN) {
+      setAppState(AppState.ADMIN_DASHBOARD);
+    } else {
+      setAppState(AppState.HOME);
+    }
+  };
+
+  const logout = () => {
+    setUserRole(null);
+    setAppState(AppState.LOGIN);
+    setCart([]);
+  };
 
   const startOrder = () => setAppState(AppState.MENU);
 
@@ -46,14 +65,9 @@ const App: React.FC = () => {
 
   const placeOrder = async () => {
     if (cart.length === 0) return;
-    
-    // Simulate API Call
     const orderNum = Math.floor(Math.random() * 900 + 100).toString();
     setLastOrderNumber(orderNum);
     setAppState(AppState.CONFIRMATION);
-    
-    // In a real app, we would POST to Flask backend here
-    // const response = await fetch('/api/orders', { method: 'POST', body: JSON.stringify({ items: cart, total: totalPrice }) });
   };
 
   const resetOrder = () => {
@@ -62,24 +76,51 @@ const App: React.FC = () => {
     setSelectedCategory(CATEGORIES[0].id);
   };
 
+  const addProduct = (newProduct: Product) => {
+    setProducts(prev => [newProduct, ...prev]);
+  };
+
+  const deleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  // Router-like logic
+  if (appState === AppState.LOGIN) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  if (appState === AppState.ADMIN_DASHBOARD) {
+    return (
+      <AdminDashboard 
+        products={products} 
+        categories={CATEGORIES} 
+        onAddProduct={addProduct} 
+        onDeleteProduct={deleteProduct}
+        onLogout={logout}
+      />
+    );
+  }
+
   if (appState === AppState.HOME) {
     return (
       <div 
-        className="h-screen w-screen flex flex-col items-center justify-center bg-emerald-600 text-white p-8 cursor-pointer"
+        className="h-screen w-screen flex flex-col items-center justify-center bg-emerald-600 text-white p-8 cursor-pointer relative"
         onClick={startOrder}
       >
+        <button 
+          onClick={(e) => { e.stopPropagation(); logout(); }}
+          className="absolute top-8 right-8 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm font-bold border border-white/30 transition-colors"
+        >
+          Logout
+        </button>
         <div className="text-center space-y-8">
-          <h1 className="text-6xl font-black uppercase tracking-tighter">QuickBite</h1>
+          <h1 className="text-7xl font-black uppercase tracking-tighter">QuickBite</h1>
           <p className="text-2xl font-medium opacity-90">Fresh • Fast • Delicious</p>
           <div className="mt-12 animate-pulse">
             <div className="bg-white text-emerald-600 px-12 py-6 rounded-full text-3xl font-bold shadow-2xl">
               TAP TO START ORDER
             </div>
           </div>
-        </div>
-        <div className="absolute bottom-12 flex space-x-4">
-          <span className="bg-white/20 px-4 py-2 rounded-full text-sm">EN</span>
-          <span className="bg-white/10 px-4 py-2 rounded-full text-sm">ES</span>
         </div>
       </div>
     );
@@ -91,34 +132,32 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      {/* Header */}
       <header className="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm shrink-0">
         <h2 className="text-2xl font-bold text-emerald-600">QuickBite</h2>
-        <button 
-          onClick={() => setAppState(AppState.HOME)}
-          className="text-gray-500 font-semibold"
-        >
-          Cancel
-        </button>
+        <div className="flex items-center space-x-4">
+           <button 
+            onClick={() => setAppState(AppState.HOME)}
+            className="text-gray-500 font-semibold px-4 py-1 hover:bg-gray-100 rounded-lg"
+          >
+            Cancel Order
+          </button>
+        </div>
       </header>
 
       <main className="flex flex-1 overflow-hidden">
-        {/* Categories */}
         <CategorySidebar 
           categories={CATEGORIES} 
           selectedId={selectedCategory} 
           onSelect={setSelectedCategory} 
         />
 
-        {/* Products */}
         <div className="flex-1 overflow-y-auto p-6">
           <ProductGrid 
-            products={PRODUCTS.filter(p => p.categoryId === selectedCategory)} 
+            products={products.filter(p => p.categoryId === selectedCategory)} 
             onProductClick={setCustomizingProduct} 
           />
         </div>
 
-        {/* Cart */}
         <CartSidebar 
           items={cart} 
           totalPrice={totalPrice} 
@@ -127,7 +166,6 @@ const App: React.FC = () => {
         />
       </main>
 
-      {/* Customization Modal */}
       {customizingProduct && (
         <CustomizationModal 
           product={customizingProduct} 
