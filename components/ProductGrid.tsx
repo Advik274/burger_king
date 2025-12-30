@@ -8,29 +8,48 @@ interface Props {
 }
 
 const ProductGrid: React.FC<Props> = ({ products, onProductClick }) => {
+  if (products.length === 0) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center space-y-4 opacity-30">
+        <span className="text-6xl">🏜️</span>
+        <p className="font-black uppercase tracking-widest">No items found</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       {products.map((product) => (
         <div
           key={product.id}
-          onClick={() => onProductClick(product)}
-          className="bg-white rounded-3xl overflow-hidden shadow-md active:scale-95 transition-transform cursor-pointer border border-transparent active:border-emerald-500"
+          onClick={() => !product.isOutOfStock && onProductClick(product)}
+          className={`group relative bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl active:scale-95 transition-all duration-300 cursor-pointer border border-transparent ${product.isOutOfStock ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:border-emerald-500'}`}
         >
-          <div className="h-48 overflow-hidden">
+          {product.isOutOfStock && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+              <span className="bg-white text-gray-900 px-6 py-2 rounded-full font-black uppercase text-xs tracking-tighter transform -rotate-12">Sold Out</span>
+            </div>
+          )}
+          
+          <div className="h-56 overflow-hidden relative">
             <img 
               src={product.image} 
               alt={product.name} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
-          </div>
-          <div className="p-5">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-xl font-bold text-gray-800 leading-tight">{product.name}</h3>
-              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
-                ${product.price.toFixed(2)}
-              </span>
+            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl font-black text-emerald-600 shadow-lg">
+              ${product.price.toFixed(2)}
             </div>
-            <p className="text-gray-500 text-sm line-clamp-2">{product.description}</p>
+          </div>
+          
+          <div className="p-6">
+            <h3 className="text-2xl font-black text-gray-900 leading-none mb-2">{product.name}</h3>
+            <p className="text-gray-400 text-sm font-medium line-clamp-2 leading-snug">{product.description}</p>
+            
+            <div className="mt-4 flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Premium Selection</span>
+            </div>
           </div>
         </div>
       ))}
